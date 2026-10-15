@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Firebase Integration</title>
+    <style>
+        :root {
+            --bg-primary: #0b0d12;
+            --bg-secondary: #141824;
+            --bg-card: #1c2230;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #ff6b00;
+            --accent-secondary: #ff9100;
+            --accent-gradient: linear-gradient(135deg, #ff9100 0%, #ff3d00 100%);
+            --glow-color: rgba(255, 107, 0, 0.45);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            padding: 2rem 5%;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 107, 0, 0.2);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        .logo span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 107, 0, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .admin-card h3 {
+            margin-bottom: 1rem;
+            color: var(--accent-secondary);
+            font-size: 1.1rem;
+            border-bottom: 1px solid rgba(255, 107, 0, 0.15);
+            padding-bottom: 0.5rem;
+        }
+
+        .section-header-title {
+            color: var(--accent);
+            margin: 2rem 0 1rem 0;
+            font-size: 1.4rem;
+            border-bottom: 2px solid rgba(255, 107, 0, 0.3);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background-color: var(--bg-secondary);
+            border: 1px solid rgba(255, 107, 0, 0.3);
+            border-radius: 4px;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--glow-color);
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--accent-gradient);
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.95;
+            transform: translateY(-2px);
+        }
+
+        #status-msg {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Admin <span>Panel (Firebase)</span></div>
+    </header>
+
+    <main>
+        <h2 style="margin-bottom: 1.5rem;">⚙ Dashboard Pengelola Gambar & Teks Website</h2>
+
+        <h3 class="section-header-title">🖼️ Pengelolaan Gambar (Firebase Storage)</h3>
+        <div class="admin-grid">
+            <div class="admin-card">
+                <h3>Ganti Foto Profil</h3>
+                <div class="form-group">
+                    <label>Upload File Gambar Baru</label>
+                    <input type="file" id="profile-file-input" class="form-control" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Atau Input Link / URL Gambar Manual</label>
+                    <input type="text" id="profile-url-input" class="form-control" placeholder="https://domain.com/foto.jpg">
+                </div>
+                <button id="save-profile-btn" class="btn">Update Foto Profil</button>
+            </div>
+
+            <div class="admin-card">
+                <h3>Ganti Gambar Portofolio</h3>
+                <div class="form-group">
+                    <label>Pilih Item Portofolio</label>
+                    <select id="portfolio-select" class="form-control">
+                        <option value="port-img-1">Inventory Web App (g1.png)</option>
+                        <option value="port-img-2">Wayfinding Web App (g2.png)</option>
+                        <option value="port-img-3">Signage Flow Web App (g3.png)</option>
+                        <option value="port-img-4">Koleksi Vektor & Ikon (g5.png)</option>
+                        <option value="port-img-5">Brand Identitas Visual (g6.jpg)</option>
+                        <option value="port-img-6">UI/UX Mobile Kit (g7.jpg)</option>
+                        <option value="port-img-7">Kitchen Set Modern (g8.png)</option>
+                        <option value="port-img-8">Furnitur Ruang Tamu (g4.png)</option>
+                        <option value="port-img-9">Tata Ruang Kerja (g9.png)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Upload File Gambar Baru</label>
+                    <input type="file" id="portfolio-file-input" class="form-control" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>Atau Input Link / URL Gambar Manual</label>
+                    <input type="text" id="portfolio-url-input" class="form-control" placeholder="https://domain.com/gambar.png">
+                </div>
+                <button id="save-portfolio-btn" class="btn">Update Gambar Portofolio</button>
+            </div>
+        </div>
+
+        <h3 class="section-header-title">📝 Pengelolaan Teks Website (Firestore)</h3>
+        <div class="admin-grid">
+            
+            <div class="admin-card">
+                <h3>Menu Navigasi</h3>
+                <div class="form-group">
+                    <label>Menu 1</label>
+                    <input type="text" id="input-txt-nav-home" class="form-control" value="Home">
+                </div>
+                <div class="form-group">
+                    <label>Menu 2</label>
+                    <input type="text" id="input-txt-nav-services" class="form-control" value="Layanan">
+                </div>
+                <div class="form-group">
+                    <label>Menu 3</label>
+                    <input type="text" id="input-txt-nav-portfolio" class="form-control" value="Portofolio">
+                </div>
+                <div class="form-group">
+                    <label>Menu 4</label>
+                    <input type="text" id="input-txt-nav-contact" class="form-control" value="Kontak">
+                </div>
+                <button id="save-nav-text-btn" class="btn">Simpan Navigasi</button>
+            </div>
+
+            <div class="admin-card">
+                <h3>Section Home (Hero)</h3>
+                <div class="form-group">
+                    <label>Judul Utama</label>
+                    <input type="text" id="input-txt-hero-title" class="form-control" value="Hi, Saya <span>Freelancer Profesional</span>">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi Hero</label>
+                    <textarea id="input-txt-hero-desc" class="form-control">Solusi Satu Pintu untuk Kebutuhan Visual 3D Desain, Desain Vector, dan Aplikasi Web Modern Anda.</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Teks Tombol Hero</label>
+                    <input type="text" id="input-txt-hero-btn" class="form-control" value="Mulai Proyek">
+                </div>
+                <button id="save-hero-text-btn" class="btn">Simpan Home</button>
+            </div>
+
+            <div class="admin-card">
+                <h3>Section Layanan</h3>
+                <div class="form-group">
+                    <label>Judul Section</label>
+                    <input type="text" id="input-txt-services-title" class="form-control" value="Layanan Saya">
+                </div>
+                <div class="form-group">
+                    <label>Layanan 1 (Judul)</label>
+                    <input type="text" id="input-txt-service1-title" class="form-control" value="Web Development">
+                </div>
+                <div class="form-group">
+                    <label>Layanan 1 (Deskripsi)</label>
+                    <textarea id="input-txt-service1-desc" class="form-control">Membangun aplikasi web kustom yang cepat, aman, dan responsif menggunakan teknologi frontend dan backend modern.</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Layanan 1 (Tag Aplikasi)</label>
+                    <input type="text" id="input-txt-service1-tag" class="form-control" value="Aplikasi: HTML,CSS & JavaScript">
+                </div>
+                <button id="save-services-text-btn" class="btn">Simpan Layanan</button>
+            </div>
+
+            <div class="admin-card">
+                <h3>Section Portofolio</h3>
+                <div class="form-group">
+                    <label>Judul Section</label>
+                    <input type="text" id="input-txt-portfolio-title" class="form-control" value="Portofolio Terbaru">
+                </div>
+                <div class="form-group">
+                    <label>Kategori 1 Title</label>
+                    <input type="text" id="input-txt-cat-web" class="form-control" value="Web Development">
+                </div>
+                <div class="form-group">
+                    <label>Kategori 2 Title</label>
+                    <input type="text" id="input-txt-cat-design" class="form-control" value="Asset & UI/UX Design">
+                </div>
+                <div class="form-group">
+                    <label>Kategori 3 Title</label>
+                    <input type="text" id="input-txt-cat-3d" class="form-control" value="3D Design">
+                </div>
+                <button id="save-portfolio-text-btn" class="btn">Simpan Portofolio</button>
+            </div>
+
+            <div class="admin-card">
+                <h3>Section Kontak</h3>
+                <div class="form-group">
+                    <label>Judul Section</label>
+                    <input type="text" id="input-txt-contact-title" class="form-control" value="Mari Bekerja Sama">
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi Kontak</label>
+                    <textarea id="input-txt-contact-desc" class="form-control">Punya proyek menarik atau ingin berdiskusi terlebih dahulu? Silakan hubungi saya melalui platform di bawah ini.</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Teks Tombol WhatsApp</label>
+                    <input type="text" id="input-txt-contact-wa-btn" class="form-control" value="Hubungi via WhatsApp">
+                </div>
+                <div class="form-group">
+                    <label>Teks Tombol Email</label>
+                    <input type="text" id="input-txt-contact-email-btn" class="form-control" value="Kirim Email">
+                </div>
+                <div class="form-group">
+                    <label>Alamat Email (Teks)</label>
+                    <input type="text" id="input-txt-contact-email-val" class="form-control" value="emailAnda@gmail.com">
+                </div>
+                <button id="save-contact-text-btn" class="btn">Simpan Kontak</button>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="status-msg">
+        <span id="status-text">Memproses data...</span>
+    </div>
+
+    <!-- FIREBASE SDK DENGAN CONFIG BARU (portopolio-khoi) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBnvqSdX1k9UFOAKXRZ4yKNxyyLhXRoMMY",
+            authDomain: "portopolio-khoi.firebaseapp.com",
+            projectId: "portopolio-khoi",
+            storageBucket: "portopolio-khoi.firebasestorage.app",
+            messagingSenderId: "1095640364648",
+            appId: "1:1095640364648:web:91ba815cb37ac0a461eddd",
+            measurementId: "G-BRYL0BKWDC"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        const statusMsg = document.getElementById('status-msg');
+        const statusText = document.getElementById('status-text');
+
+        function showStatus(msg) {
+            statusText.textContent = msg;
+            statusMsg.style.display = 'block';
+        }
+
+        function hideStatus() {
+            setTimeout(() => {
+                statusMsg.style.display = 'none';
+            }, 3000);
+        }
+
+        async function processImageUpdate(fileInputId, urlInputId, targetId) {
+            const fileInput = document.getElementById(fileInputId);
+            const urlInput = document.getElementById(urlInputId);
+            const file = fileInput.files[0];
+            const urlVal = urlInput.value.trim();
+
+            if (file) {
+                try {
+                    showStatus("Mengunggah gambar ke Firebase Storage...");
+                    const storageRef = ref(storage, `portfolio_images/${targetId}_${Date.now()}`);
+                    const snapshot = await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(snapshot.ref);
+
+                    showStatus("Menyimpan tautan ke Firestore...");
+                    await setDoc(doc(db, "images", targetId), { url: downloadURL });
+                    
+                    showStatus("✅ Gambar berhasil diperbarui!");
+                    fileInput.value = "";
+                } catch (err) {
+                    console.error(err);
+                    showStatus("❌ Gagal upload: " + err.message);
+                } finally {
+                    hideStatus();
+                }
+            } else if (urlVal !== "") {
+                try {
+                    showStatus("Menyimpan URL ke Firestore...");
+                    await setDoc(doc(db, "images", targetId), { url: urlVal });
+                    showStatus("✅ URL Gambar berhasil disimpan!");
+                    urlInput.value = "";
+                } catch (err) {
+                    console.error(err);
+                    showStatus("❌ Gagal simpan URL: " + err.message);
+                } finally {
+                    hideStatus();
+                }
+            } else {
+                alert("Pilih file atau masukkan URL gambar terlebih dahulu!");
+            }
+        }
+
+        document.getElementById('save-profile-btn').addEventListener('click', () => {
+            processImageUpdate('profile-file-input', 'profile-url-input', 'profile-img-display');
+        });
+
+        document.getElementById('save-portfolio-btn').addEventListener('click', () => {
+            const selectedId = document.getElementById('portfolio-select').value;
+            processImageUpdate('portfolio-file-input', 'portfolio-url-input', selectedId);
+        });
+
+        async function saveTextsToFirestore(textMap) {
+            try {
+                showStatus("Menyimpan teks ke Firestore...");
+                for (const [key, val] of Object.entries(textMap)) {
+                    await setDoc(doc(db, "texts", key), { val: val });
+                }
+                showStatus("✅ Teks berhasil disimpan!");
+            } catch (err) {
+                console.error(err);
+                showStatus("❌ Gagal simpan teks: " + err.message);
+            } finally {
+                hideStatus();
+            }
+        }
+
+        document.getElementById('save-nav-text-btn').addEventListener('click', () => {
+            saveTextsToFirestore({
+                'txt-nav-home': document.getElementById('input-txt-nav-home').value,
+                'txt-nav-services': document.getElementById('input-txt-nav-services').value,
+                'txt-nav-portfolio': document.getElementById('input-txt-nav-portfolio').value,
+                'txt-nav-contact': document.getElementById('input-txt-nav-contact').value
+            });
+        });
+
+        document.getElementById('save-hero-text-btn').addEventListener('click', () => {
+            saveTextsToFirestore({
+                'txt-hero-title': document.getElementById('input-txt-hero-title').value,
+                'txt-hero-desc': document.getElementById('input-txt-hero-desc').value,
+                'txt-hero-btn': document.getElementById('input-txt-hero-btn').value
+            });
+        });
+
+        document.getElementById('save-services-text-btn').addEventListener('click', () => {
+            saveTextsToFirestore({
+                'txt-services-title': document.getElementById('input-txt-services-title').value,
+                'txt-service1-title': document.getElementById('input-txt-service1-title').value,
+                'txt-service1-desc': document.getElementById('input-txt-service1-desc').value,
+                'txt-service1-tag': document.getElementById('input-txt-service1-tag').value
+            });
+        });
+
+        document.getElementById('save-portfolio-text-btn').addEventListener('click', () => {
+            saveTextsToFirestore({
+                'txt-portfolio-title': document.getElementById('input-txt-portfolio-title').value,
+                'txt-cat-web': document.getElementById('input-txt-cat-web').value,
+                'txt-cat-design': document.getElementById('input-txt-cat-design').value,
+                'txt-cat-3d': document.getElementById('input-txt-cat-3d').value
+            });
+        });
+
+        document.getElementById('save-contact-text-btn').addEventListener('click', () => {
+            saveTextsToFirestore({
+                'txt-contact-title': document.getElementById('input-txt-contact-title').value,
+                'txt-contact-desc': document.getElementById('input-txt-contact-desc').value,
+                'txt-contact-wa-btn': document.getElementById('input-txt-contact-wa-btn').value,
+                'txt-contact-email-btn': document.getElementById('input-txt-contact-email-btn').value,
+                'txt-contact-email-val': document.getElementById('input-txt-contact-email-val').value
+            });
+        });
+    </script>
+</body>
+</html>
